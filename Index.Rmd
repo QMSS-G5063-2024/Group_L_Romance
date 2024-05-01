@@ -1,0 +1,714 @@
+---
+title: "Group L Romance"
+author: "Ellen Ren, Priyansha Gupta, Stella Nguyen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(shiny)
+library(DT)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(shinyWidgets)
+library(plotly)
+library(DT)         
+library(knitr)      
+library(tidyr)      
+library(tidyverse)  
+library(highcharter)
+library(broom)      
+library(viridis)
+library(hrbrthemes)
+library(readxl)
+library(devtools)
+library(leaflet)
+library(ggthemes)
+library(maps)
+library(RColorBrewer)
+library(sf)
+library(forcats)
+library(scales)
+```
+
+```{r echo=FALSE, warning = FALSE}
+
+suppressMessages({
+  GSS_Pri <- read_excel("Datafiles/GSS_Pri.XLSX", col_names = TRUE)
+})
+```
+
+```{r echo=FALSE, warning = FALSE}
+suppressMessages({data<- read_excel ("Datafiles/GSS_cleaned.XLSX")})
+```
+
+```{r echo=FALSE, warning = FALSE}
+suppressMessages({datar<-read_excel ("Datafiles/GSS_cleaned.XLSX")})
+
+```
+
+## **Exploring Love and Life in 1996: A Glimpse into Our Parents' World of Romance**
+
+Step into the world of 1996, a time when most romantic connections were sparked in person rather than through a screen. Our interactive visualizations draw from the 1996 General Social Survey (GSS), offering a fascinating look at how the previous generation experienced love and partnership before the digital age transformed social interactions.
+
+The GSS is a nationally representative survey that has been conducted annually since 1972. It collects data on contemporary American society to monitor and explain trends in opinions, attitudes, and behaviors across a wide range of topics including civil liberties, crime, morality, and more. With its long-standing tradition of collecting diverse sociological data, the GSS allows us to examine changes in societal structure and individual behaviors over time, making it the single best source for understanding shifts in American values and experiences.
+
+This project examines the emotional dynamics and societal views on romance, marriage, and domestic life in 1996. Explore how people engage in romance, and delve into the prevailing attitudes toward marriage and the division of labor within households. How did people view their romantic commitments, and what does that reveal about societal shifts? We also investigate how regional backgrounds influenced views on romance and domestic responsibilities.
+
+Why focus on romance from a quarter-century ago? Because romance has always been a puzzling yet perennial topic across generations—confusing then and confusing now. By studying this dataset, we'll reveal interesting insights about how our parents navigated the labyrinth of love. Romance may change its mediums, but the quest for connection remains timeless.
+
+Join us in uncovering the patterns of romance in a pre-digital era and discover how societal norms and relationships have evolved over the decades.
+
+![](images/clipboard-1407392822.png){width="500"}
+
+### **Navigating Role Dynamics: Factors Shaping Partnership Equality**
+
+Role division between partners in a relationship often reflects a complex interplay of personal preferences, cultural norms, and societal expectations. While traditional gender roles have historically dictated specific duties for men (usually being the breadwinners) and women (usually being the caretakers) within a household, contemporary dynamics see a more diverse range of arrangements. This also encompasses practices surrounding who manages finances in the household and perceived fairness of household work. Preferences for role division with a spouse can vary significantly based on factors such as age, sex, political affiliation, and regional culture.
+
+Let's explore some of these factors below.
+
+#### **Do individuals lean towards traditional gender roles, with men as primary breadwinners and women as caretakers, or do they prefer a more egalitarian approach, sharing both responsibilities equally?**
+
+```{r echo=FALSE, warning = FALSE}
+Pri1<-GSS_Pri
+Pri1<- Pri1 %>% 
+  select(AGE, SEX, TRADMOD)
+Pri1 <- na.omit(Pri1)
+Pri1$SEX <- factor(Pri1$SEX, levels = c(1, 2), labels = c("Male", "Female"))
+Pri1$TRADMOD <- factor(Pri1$TRADMOD, levels = c(1, 2), labels = c("Traditional Roles", "Equal Roles"))
+
+
+portland_colors <- c("#87CEEB", "#E75480")
+
+plot1 <- ggplot(Pri1, aes(x = TRADMOD, y = AGE, fill = SEX)) +
+  geom_boxplot() +
+  labs(x = "Sharing Responsibility", y = "Age", fill = "Sex") +
+  ggtitle("Age, Sex and Role Preferences") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = portland_colors)
+
+plot1
+```
+
+The boxplot titled "Age, Sex, and Role Preferences" displays the distribution of ages across different preferences for sharing responsibilities in relationships, categorized by gender. The x-axis represents the two categories of role preferences: "Traditional Roles" and "Equal Roles." The y-axis shows the age of respondents. The boxplot reveals that respondents who prefer traditional roles tend to have a slightly higher median age compared to those who prefer equal roles. Older individuals may adhere more closely to traditional roles, influenced by upbringing and societal norms prevalent during their formative years. Additionally, gender plays a significant role, with men and women often having different expectations regarding household duties- amidst people who favor traditional roles, men have a slightly higher median age than women. Additionally, there is a narrower spread of ages among those who prefer equal roles, indicating a lower diversity of age groups within this category. And it is a lower age bracket which supports equal roles. Overall, this boxplot provides insights into how age and gender intersect with preferences for relationship roles.
+
+```{r echo=FALSE, warning = FALSE}
+
+# Define labels for PARTYID
+party_labels <- c("Strong Democrat", "Not very strong Democrat", "Independent, close to Democrat",
+                  "Independent (Neither, No response)", "Independent, close to Republican",
+                  "Not very strong Republican", "Strong Republican", "Other party, refused to say")
+
+
+# Define labels for TRADMOD
+tradmod_labels <- c("Man main income, woman home", "Equal responsibility")
+
+data$PARTYID <- factor(data$PARTYID, levels = 0:7, labels = party_labels)
+
+data$TRADMOD <- factor(data$TRADMOD, levels = 1:2, labels = tradmod_labels)
+
+# Building heatmap 2 - PARTYID & TRADMOD
+chart2_data <- data %>%
+    count(PARTYID, TRADMOD, name = "Number of Respondents")
+
+chart2 <- plot_ly(chart2_data, x = ~PARTYID, y = ~TRADMOD, z = ~`Number of Respondents`,
+                  type = "heatmap", colorscale = 'Portland', hoverinfo = 'x+y+z+text',
+                  text = ~paste('Number of Respondents:', `Number of Respondents`)) %>%
+    layout(title = "Variation in Relationship Role Preferences Across Political Lines",
+           xaxis = list(title = "Political Affiliation", tickangle = 45),
+           yaxis = list(title = "Relationship Role Preferences"),
+           colorbar = list(title = "Number of Respondents"))
+chart2
+```
+
+In the heatmap above, 0 represents strong democrat while 7 represents strong republican. This illustrates the diversity in relationship role preferences along political affiliations. There is a clear trend where individuals identifying as Democrats, regardless of strength of affiliation, favor equal responsibility in a relationship more than those identifying as Republicans. This could reflect broader ideological beliefs about gender roles within society, where Democrats may align more with egalitarian principles.
+
+#### **How does the couple divide the responsibility of managing finances?**
+
+```{r echo=FALSE, warning = FALSE}
+# Convert '9' placeholder for missing data to NA
+
+
+
+famfinan_labels <- c("Wife manages money", "Husband manages money", "Wife has allowance",
+                     "Money pooled", "Some money pooled", "Finances separate")
+data$FAMFINAN <- factor(data$FAMFINAN, levels = 1:6, labels = famfinan_labels)
+# Building heatmap 1 - PARTYID & FAMFINAN
+chart1_data <- data %>%
+    count(PARTYID, FAMFINAN, name = "Number of Respondents")
+
+chart1 <- plot_ly(chart1_data, x = ~PARTYID, y = ~FAMFINAN, z = ~`Number of Respondents`,
+                  type = "heatmap", colorscale = 'Portland', hoverinfo = 'x+y+z+text',
+                  text = ~paste('Number of Respondents:', `Number of Respondents`)) %>%
+    layout(title = "How Political Views Align with Family Finance Management",
+           xaxis = list(title = "Political Affiliation", tickangle = 45),
+           yaxis = list(title = "Family Finance Management Style"),
+           colorbar = list(title = "Number of Respondents"))
+
+chart1
+```
+
+In the heat map above, 0 represents strong democrat while 7 represents strong republican. The visualization presents a breakdown of family finance management styles across different political affiliations. It's evident that pooling money is a popular choice among all political groups, suggesting a common preference for shared financial responsibility in a family setting. Notably, strong Democrats and independents close to Democrats appear to lean more towards keeping finances separate compared to strong Republicans, indicating varied approaches to financial independence within relationships across the political spectrum.
+
+#### **How does perception of the fairness of work change with number of hours one works for?**
+
+```{r echo=FALSE, warning = FALSE}
+Pri5<-GSS_Pri
+Pri5<-Pri5%>%
+  select(HRS1, SPHRS1, FAIRHWRK)
+Pri5<- na.omit(Pri5)
+
+colors <- c("darkred", "#FF7F00", "yellow") 
+
+ggplot(Pri5, aes(x = HRS1, y = SPHRS1, color = factor(FAIRHWRK))) +
+  geom_point(size = 3) + 
+  geom_smooth(method = "auto", se = FALSE) + 
+  scale_color_manual(values = colors, labels = c("Fair to both me and my spouse", "Unfair to me", "Unfair to my spouse")) + 
+  labs(x = "Respondent's hours", y = "Spouse's working hours") + 
+  theme_minimal() 
+```
+
+We thought it might also be interesting to see if there is a pattern to how men and women report their hours and their spouse's working hours.
+
+```{r echo=FALSE, warning = FALSE}
+Pri6<-GSS_Pri
+Pri6<-Pri6%>%
+  select(HRS1, SPHRS1, SEX)
+Pri6<- na.omit(Pri6)
+
+ggplot(Pri6, aes(x = HRS1, y = SPHRS1, color = factor(SEX))) +
+  geom_point(size = 3) +
+  geom_smooth(method = "auto", se = FALSE) + 
+  scale_color_manual(values = portland_colors, labels = c("Male", "Female")) + 
+  labs(x = "Respondent's work hours", y = "Spouse's work hours") + 
+  theme_minimal()
+```
+
+We can clearly see that females reported a slightly higher number for their spouse's working hours as compared to males.
+
+### **Emotional Engagement**
+
+#### **What is the preferred dynamic in relationships regarding emotional dependency: a preference for emotional interdependence or for emotional independence with one's partner?**
+
+Emotional dependence is a fundamental aspect of human interaction and can significantly impact individuals' behaviors and decision-making processes in their relationships. By visually representing the distribution of ages across categories of emotional dependence, the boxplot below offers insights into how these factors intersect and influence one another. Moreover, exploring these dynamics within the context of gender can contribute to discussions surrounding gender roles, social expectations, and emotional well-being.
+
+```{r echo=FALSE, warning = FALSE}
+Pri2<-GSS_Pri
+Pri2<- Pri2 %>% 
+  select(AGE, SEX, EMOTEOTH)
+Pri2 <- na.omit(Pri2)
+
+Pri2$SEX <- factor(Pri2$SEX, levels = c(1, 2), labels = c("Male", "Female"))
+Pri2$EMOTEOTH <- factor(Pri2$EMOTEOTH, levels = c(1, 2), labels = c("Emotionally dependent", "Emotionally independent"))
+
+plot2<-ggplot(Pri2, aes(x = EMOTEOTH, y = AGE, fill = SEX)) +
+  geom_boxplot() +
+  labs(x = "Emotional dependence", y = "Age", fill = "Sex") + ggtitle("Age, Sex and Emotional Dependence")+ 
+  theme_minimal()+ theme(plot.title = element_text(hjust = 0.5)) + 
+  scale_fill_manual(values = portland_colors)
+
+plot2
+
+```
+
+The boxplot titled "Age, Sex, and Emotional Dependence" illustrates the relationship between age, sex, and emotional dependence among respondents. The x-axis represents two categories of emotional dependence: "Emotionally dependent" and "Emotionally independent." The y-axis displays the age distribution of respondents. This visualization reveals intriguing patterns regarding how age and gender intersect with emotional dependence. Interestingly, while there appears to be a slight difference in the median ages between those classified as emotionally dependent and emotionally independent, the spread of ages within each category varies. The distribution is narrower when it comes to people preferring emotional independence in relationships. The median ages are also slightly higher in the emotionally independent category as compared to the emotionally dependent category. One possible explanation could be that as individuals grow older, they tend to prioritize independence and autonomy in their emotional relationships. With age often comes increased life experience, self-awareness, and maturity, which may lead individuals to develop a greater sense of self-reliance and emotional stability.
+
+#### **What is the preferred dynamic in relationships regarding sharing social life?**
+
+Sharing social life with your spouse is another interesting indicator of how people like to maintain social and emotional boundaries as they pursue social interests together or independently.
+
+```{r echo=FALSE, warning = FALSE}
+Pri3<-GSS_Pri
+Pri3<- Pri3 %>% 
+  select(AGE, SEX, SHARESEP)
+Pri3 <- na.omit(Pri3)
+
+Pri3$SEX <- factor(Pri3$SEX, levels = c(1, 2), labels = c("Male", "Female"))
+Pri3$SHARESEP <- factor(Pri3$SHARESEP, levels = c(1, 2), labels = c("Share social life", "Individual interests"))
+
+plot3<-ggplot(Pri3, aes(x = SHARESEP, y = AGE, fill = SEX)) +
+  geom_boxplot() +
+  labs(x = "Sharing social life", y = "Age", fill = "Sex") + ggtitle("Age, Sex and Sharing Social Life with Partner")+
+  theme_minimal() +theme(plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = portland_colors)
+
+plot3
+```
+
+The boxplot illustrates the relationship between age, sex, and sharing social life among respondents. The key difference to note is that the distribution of females is broader across age when it comes to pursuing individual interests as compared to men who prefer doing that. The median ages also go up slightly for people favoring to pursue individual interests rather than sharing social life. This might be seen as a complementary thing to emotional dependence - as people grow older they realize the importance of having a certain independence in their life.
+
+#### **How do people view their romantic relationships?**
+
+```{r echo=FALSE, warning = FALSE}
+datar <- datar %>%
+  mutate(
+    ROMANCE = factor(ifelse(ROMANCE == 1, "Yes", "No"), levels = c("No", "Yes")),
+    LIVEWITH = factor(ifelse(LIVEWITH == 1, "Yes", "No"), levels = c("No", "Yes")),
+    HAPPROM = factor(HAPPROM, levels = c(1, 2, 3), labels = c("Very happy", "Pretty happy", "Not too happy")),
+    WILLWED1 = factor(WILLWED1, levels = c(1, 2, 3, 4), labels = c("Very likely", "Somewhat likely", "Somewhat unlikely", "Very unlikely")),
+    WILLWED2 = factor(WILLWED2, levels = c(1, 2), labels = c("Yes", "No"))
+  ) %>%
+  filter(!is.na(ROMANCE))
+
+# Plot for individuals in relationships
+in_relationships_data <- datar %>%
+  filter(ROMANCE == "Yes") %>%
+  drop_na(LIVEWITH, HAPPROM, WILLWED1)
+
+# Plot for individuals not in relationships
+not_in_relationships_data <- datar %>%
+  filter(ROMANCE == "No") %>%
+  drop_na(WILLWED2)
+
+# Define color scales
+happy_colors <- c("Very happy" = "#6BAED6", "Pretty happy" = "#FD8D3C", "Not too happy" = "#31A354")
+will_wed_colors <- c("Yes" = "#6BAED6", "No" = "#FD8D3C")
+
+# Create the plots
+p1_description <- "This plot visualizes the happiness levels among individuals in relationships, considering their living status and likelihood of getting married."
+p1 <- ggplot(in_relationships_data, aes(x = LIVEWITH, fill = HAPPROM)) +
+  geom_bar(position = "fill") +
+  scale_fill_manual(values = happy_colors) +
+  labs(
+    title = "Relationship Happiness and Living Status for People in Relationships",
+    y = "Percentage of Respondents",
+    x = "Living Together",
+    fill = "Happiness Level",
+  ) +
+  facet_wrap(~WILLWED1) +
+  theme_minimal() +
+  scale_y_continuous(labels = percent_format())
+
+p2_description <- "This chart displays the proportion of single individuals who desire to get married in the future."
+p2 <- ggplot(not_in_relationships_data, aes(x = "", fill = WILLWED2)) +
+  geom_bar(position = "fill") +
+  scale_fill_manual(values = will_wed_colors) +
+  labs(
+    title = "Desire to Marry Among Singles",
+    y = "Percentage of Respondents",
+    x = "",
+    fill = "Desire to Marry",
+    caption = p2_description
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    plot.caption = element_text(hjust = 0)
+  ) +
+  scale_y_continuous(labels = percent_format())
+
+# Save the plots
+ggsave("in_relationships_plot.png", p1, width = 10, height = 8)
+ggsave("not_in_relationships_plot.png", p2, width = 10, height = 8)
+
+```
+
+```{r echo=FALSE, warning = FALSE}
+print(p1)
+```
+
+This chart offers a layered perspective on relationship dynamics in 1996, specifically focusing on the interplay between cohabitation, happiness, and the likelihood of marriage for people in relationships. The color gradients represent varying levels of happiness within relationships, ranging from 'very happy' to 'not too happy'. A striking feature of this visualization is the concentration of 'very happy' responses among those who live with their partners and deem marriage 'very likely' or 'somewhat likely'. This trend suggests that cohabitation is often associated with a stronger sense of relationship satisfaction and a clear inclination towards future marital commitment. Conversely, individuals who do not live with their partners show a more diverse range of happiness levels, hinting at the complexity of factors that contribute to relationship satisfaction beyond living arrangements.
+
+```{r echo=FALSE, warning = FALSE}
+print(p2)
+```
+
+This simplified chart shifts focus to single individuals, capturing their future romantic aspirations. The dominant blue shade reveals that a significant majority of singles express a desire to marry, pointing to the enduring social and personal importance of marriage at the time. The smaller orange segment reflects those content with remaining unmarried, possibly indicating a subgroup with differing views on traditional marital pathways or those prioritizing other life goals.
+
+#### **How do people view premarital sex?**
+
+```{r echo=FALSE, warning = FALSE}
+Pri4<-GSS_Pri
+Pri4<- Pri4 %>% 
+  select(AGE, SEX, PREMARSX)
+Pri4 <- na.omit(Pri4)
+
+Pri4$SEX <- factor(Pri4$SEX, levels = c(1, 2), labels = c("Male", "Female"))
+Pri4$PREMARSX <- factor(Pri4$PREMARSX, levels = c(1, 2, 3, 4), labels = c("Always wrong", "Almost always wrong", "Wrong only sometimes", "Not wrong at all")) 
+
+plot4<- ggplot(Pri4, aes(x = PREMARSX, y = AGE, fill = SEX)) +
+  geom_boxplot() +
+  labs(x = "Opinion on premarital sex", y = "Age", fill = "Sex") + ggtitle("Distribution of Age by Opinion on Premarital Sex and Sex of Respondent")+
+  theme_minimal() +theme(plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = portland_colors)
+
+plot4
+```
+
+As one would intuitively imagine, the distribution of respondents across age is the narrowest for people who favor premarital sex and the median ages for that group is also the lowest indicating that younger people are more okay with it. It is very interesting that in groups who oppose premarital sex, the age distribution for women is broader than that for men and the median age is also slightly higher for those women as compared to men opposing it as well as other groups who favor it.
+
+```{r echo=FALSE, warning = FALSE}
+# Define labels for PREMARSX
+premarsx_labels <- c("Always wrong", "Almost always wrong", "Wrong only sometimes", "Not wrong at all")
+
+data$PREMARSX <- factor(data$PREMARSX, levels = 1:4, labels = premarsx_labels)
+
+# Building heatmap 3 - PARTYID & PREMARSX
+chart3_data <- data %>%
+    count(PARTYID, PREMARSX, name = "Number of Respondents")
+chart3 <- plot_ly(chart3_data, x = ~PARTYID, y = ~PREMARSX, z = ~`Number of Respondents`,
+                  type = "heatmap", colorscale = 'Portland', hoverinfo = 'x+y+z+text',
+                  text = ~paste('Number of Respondents:', `Number of Respondents`)) %>%
+    layout(title = "Political Stance and Opinions on Pre-Marital Sex",
+           xaxis = list(title = "Political Affiliation", tickangle = 45),
+           yaxis = list(title = "Views on Pre-Marital Sex"),
+           colorbar = list(title = "Number of Respondents"))
+chart3 
+```
+
+In the heat map above, 0 represents strong democrat while 7 represents strong republican. This explores the correlation between political views and attitudes toward pre-marital sex. It is noticeable that as political views skew more conservative (i.e., towards strong Republicans), the belief that pre-marital sex is always wrong becomes more prevalent. Conversely, those with strong Democratic views are more likely to find pre-marital sex not wrong at all, suggesting that liberal views may correlate with more progressive attitudes toward sexuality.
+
+```{r echo=FALSE, warning = FALSE}
+df <- read.csv("Datafiles/GSS_cleaned.csv")
+```
+
+### **Role of Geography in Influencing Relationship Attitudes**
+
+**Aside from looking at the distribution of questions over gender and sex, how might where someone lives (or at least where the GSS interview was conducted for the participant) affect their viewpoints?**
+
+The GSS data is organized not by state, but by Census-assigned regions.
+
+Looking at the percentage of those who answered that the division of labor between the respondent and their spouse being fair for both, we can see those who believe so on the higher end (22-24%) are located in the New England area and the Mountain area, compared to the West North Central area (16%). Further adding context about the spouse-respondent dynamics and lifestyle should be further analyzed to understand if the feelings of fairness might stem from a breadwinner vs. caretaker role, along with potential political party perspectives on more traditional gender/family norms.
+
+```{r echo=FALSE, warning = FALSE}
+sub2 <- df[, c("REGION", "FAIRHWRK", "TRADMOD", "CHLDIDEL", "REG16", "PARTYID", "SPHMEWRK", "ROMANCE", "WILLWED2", "HAPPROM", "LIVEWITH", "WILLWED1", "SHARESEP", "EMOTEOTH", "SOCOMMUN")]
+
+sub2$REGION[sub2$REGION==1 ] <- "New England"
+sub2$REGION[sub2$REGION==2 ] <- "Middle Atlantic"
+sub2$REGION[sub2$REGION==3 ] <- "East North Central"
+sub2$REGION[sub2$REGION==4 ] <- "West North Central"
+sub2$REGION[sub2$REGION==5 ] <- "South Atlantic"
+sub2$REGION[sub2$REGION==6 ] <- "East South Central"
+sub2$REGION[sub2$REGION==7 ] <- "West South Central"
+sub2$REGION[sub2$REGION==8 ] <- "Mountain"
+sub2$REGION[sub2$REGION==9 ] <- "Pacific"
+
+us_shapefile <- st_read("States_shapefile.shp")
+
+us <- us_shapefile[, c("State_Code", "geometry")]
+
+state_to_region <- function(state) {
+    if (state %in% c("MT", "ID", "WY", "UT", "CO", "AZ", "NM", "NV")) {
+        return("Mountain")
+    } else if (state %in% c("ND", "SD", "MN", "NE", "IA", "MO", "KS")) {
+        return("West North Central")
+    } else if (state %in% c("OH", "IN", "IL", "MI", "WI")) {
+        return("East North Central")
+    } else if (state %in% c("ME", "VT", "NH", "MA", "CT", "RI")) {
+        return("New England")
+    } else if (state %in% c("NY", "NJ", "PA")) {
+        return("Middle Atlantic")
+    } else if (state %in% c("DE", "MD", "VA", "WV", "NC", "SC", "GA", "FL", "DC")) {
+        return("South Atlantic")
+    } else if (state %in% c("KY", "TN", "MS", "AL")) {
+        return("East South Central")
+    } else if (state %in% c("TX", "OK", "AR", "LA")) {
+        return("West South Central")
+    } else if (state %in% c("CA", "WA", "OR", "HI", "AK")) {
+        return("Pacific")
+    } else {
+        return(NA)
+    }
+}
+
+us$REGION <- sapply(us$State_Code, state_to_region)
+sub2$REGION <- as.character(sub2$REGION)
+```
+
+The GSS records where the survey was taken by Census-derived regions, as shown below in this image:
+
+The following regions include:
+
+-   Pacific: CA, WA, OR, HI, AK
+
+-   Mountain: MT, ID, WY, UT, CO, AZ, NM, NV
+
+-   West North Central: ND, SD, MN, NE, IA, MO, KS
+
+-   East North Central: OH, IN, IL, MI, WI
+
+-   West South Central: TX, OR, AR, LA
+
+-   East South Central: KY, TN, MS, AL
+
+-   South Atlantic: DE, MD, WA, WV, NC, SC, GA, FL, DC
+
+-   Middle Atlantic: NY, NJ, PA
+
+-   New England: ME, VT, NH, MA, CT, RI
+
+![](Census_Regions_and_Division_of_the_United_States.svg.png){width="600"}
+
+Using these regions, can we identify certain regions to have unique romantic characteristics?
+
+Let's take a look at those who aren't in relationships: are they hopeless romantics? Do they believe in "the one"? More specifically, if the right person came to them -- would they marry them?
+
+```{r echo=FALSE, warning = FALSE}
+sub2$ROMANCE[sub2$ROMANCE==1] <- 1
+sub2$ROMANCE[sub2$ROMANCE==3] <- 1
+sub2 <- sub2 %>%
+    filter(!is.na(ROMANCE))
+  
+
+romantic <- sub2 %>%
+    filter(ROMANCE == 1 | ROMANCE == 2) %>%
+    group_by(REGION) %>%
+    summarise(
+        in_rr = mean(ROMANCE == 2) * 100
+    )
+
+willwed2_hope <- sub2 %>%
+    filter(WILLWED2 == 1 | WILLWED2 == 2) %>%
+    group_by(REGION) %>%
+    summarise(
+        willwed2 = mean(WILLWED2 == 1) * 100
+    )
+
+
+romantic <- left_join(willwed2_hope, romantic, by = "REGION")
+romantic <- na.omit(romantic)
+rr_map <- left_join(us, romantic, by = "REGION")
+
+
+pal <- colorNumeric(palette = "PuRd", domain = rr_map$in_rr)
+
+leaflet(data = rr_map) %>%
+    addTiles() %>%
+    addPolygons(
+        fillColor = ~pal(in_rr),
+        color = "black",  
+        weight = 1,  
+        fillOpacity = 0.7, 
+        smoothFactor = 0.5,  
+        popup = ~paste0("Region: ", REGION, "<br> Not in relationship: ", round(in_rr, 2), "%", "<br>Would marry with the right one: ", round(willwed2, 2), "%")
+    ) %>%
+    addLegend(
+        pal = pal,
+        values = ~in_rr,
+        title = "% Not in a Relationship",
+        position = "bottomright"
+    )
+
+
+```
+
+In terms of respondents located in regions with the higher end of not being in relationships include the Mountain, Pacific, and West South Central (ranging from 70%, 66%, 68%, respectively). In terms of if they would marry with the right person, a majority of respondents there say yes: 58%, 62%, 70%. The regions that observe less not-in-relationship percentages of respondents also similarly observe less people who believe in marrying “the one”. Maybe there’s something about the Mid/East regions that make them more pessimistic?
+
+How about the ones in a relationship? Would they marry their current partner? Are they currently happy? Living together?
+
+```{r echo=FALSE, warning = FALSE}
+sub2$ROMANCE[sub2$ROMANCE==1] <- 1
+sub2$ROMANCE[sub2$ROMANCE==3] <- 1
+sub2 <- sub2 %>%
+    filter(!is.na(ROMANCE))
+  
+
+romantic2 <- sub2 %>%
+    filter(ROMANCE == 1 | ROMANCE == 2) %>%
+    group_by(REGION) %>%
+    summarise(
+        in_rr2 = mean(ROMANCE == 1) * 100
+    )
+
+sub2$HAPPROM[sub2$HAPPROM==1] <- 1
+sub2$HAPPROM[sub2$HAPPROM==2] <- 1
+sub2$HAPPROM[sub2$HAPPROM==3] <- 2
+
+happiness <- sub2 %>%
+    filter(HAPPROM == 1 | HAPPROM == 2) %>%
+    group_by(REGION) %>%
+    summarise(
+        happy = mean(HAPPROM == 1) * 100
+    )
+
+sub2$WILLWED1[sub2$WILLWED1==1] <- 1
+sub2$WILLWED1[sub2$WILLWED1==2] <- 1
+sub2$WILLWED1[sub2$WILLWED1==3] <- 2
+sub2$WILLWED1[sub2$WILLWED1==4] <- 2
+
+willwed1_hope <- sub2 %>%
+    filter(WILLWED1 == 1 | WILLWED1 == 2) %>%
+    group_by(REGION) %>%
+    summarise(
+        willwed1 = mean(WILLWED1 == 1) * 100
+    )
+
+living <- sub2 %>% 
+  filter(LIVEWITH == 1 | LIVEWITH == 2) %>% 
+  group_by(REGION) %>% 
+  summarise(
+    roomies = mean(LIVEWITH == 1) * 100
+  )
+
+romantic2 <- left_join(happiness, romantic2, by = "REGION")
+romantic2 <- left_join(willwed1_hope, romantic2, by = "REGION")
+romantic2 <- left_join(living, romantic2, by = "REGION")
+rr_map2 <- left_join(us, romantic2, by = "REGION")
+
+pal <- colorNumeric(palette = "Reds", domain = rr_map$in_rr2)
+
+leaflet(data = rr_map2) %>%
+    addTiles() %>%
+    addPolygons(
+        fillColor = ~pal(in_rr2),
+        color = "black",  
+        weight = 1,  
+        fillOpacity = 0.7, 
+        smoothFactor = 0.5,  
+        popup = ~paste0("Region: ", REGION, "<br> In relationship: ", round(in_rr2, 2), "%", "<br>Would marry partner: ", round(willwed1, 2), "%", "<br>Happy with relationship: ", round(happy, 2), "%","<br>Live with partner: ", round(roomies, 2), "%")
+    ) %>%
+    addLegend(
+        pal = pal,
+        values = ~in_rr2,
+        title = "% in a Relationship",
+        position = "bottomright"
+    )
+
+```
+
+So the tables have flipped here to discuss the Eastern US that observe more people in a relationship, reflecting the earlier map. The New England area specifically has the highest percentage of respondents answer they are in a relationship (53%), followed by the East South Central region (51%) and South Atlantic (48%). And they’re all quite happy couples! They all answered that they were pretty/very happy in the relationship (between 80-100%), and that it was somewhat likely / very likely that they’d marry them (87-93%).
+
+That being said, it varies a bit on how the respondents answered about living with them currently. Half (50%) in the New England region are living with their partner, followed by 48% in South Atlantic, but a concerning 26% in the West North Central region. Perhaps this suggests that it’s more about happiness than about living with their partner that respondents feel hopeful about marrying their partner.
+
+Aside from potential culture differences, could party identification play a role in the kind of values one has about a relationship?
+
+```{r echo=FALSE, warning = FALSE}
+sub2 <- df[, c("REGION", "FAIRHWRK", "TRADMOD", "CHLDIDEL", "REG16", "PARTYID", "SPHMEWRK", "ROMANCE", "WILLWED2", "HAPPROM", "LIVEWITH", "WILLWED1", "SHARESEP", "EMOTEOTH", "SOCOMMUN")]
+
+sub2$REGION[sub2$REGION==1 ] <- "New England"
+sub2$REGION[sub2$REGION==2 ] <- "Middle Atlantic"
+sub2$REGION[sub2$REGION==3 ] <- "East North Central"
+sub2$REGION[sub2$REGION==4 ] <- "West North Central"
+sub2$REGION[sub2$REGION==5 ] <- "South Atlantic"
+sub2$REGION[sub2$REGION==6 ] <- "East South Central"
+sub2$REGION[sub2$REGION==7 ] <- "West South Central"
+sub2$REGION[sub2$REGION==8 ] <- "Mountain"
+sub2$REGION[sub2$REGION==9 ] <- "Pacific"
+
+us_shapefile <- st_read("States_shapefile.shp")
+
+us <- us_shapefile[, c("State_Code", "geometry")]
+
+state_to_region <- function(state) {
+    if (state %in% c("MT", "ID", "WY", "UT", "CO", "AZ", "NM", "NV")) {
+        return("Mountain")
+    } else if (state %in% c("ND", "SD", "MN", "NE", "IA", "MO", "KS")) {
+        return("West North Central")
+    } else if (state %in% c("OH", "IN", "IL", "MI", "WI")) {
+        return("East North Central")
+    } else if (state %in% c("ME", "VT", "NH", "MA", "CT", "RI")) {
+        return("New England")
+    } else if (state %in% c("NY", "NJ", "PA")) {
+        return("Middle Atlantic")
+    } else if (state %in% c("DE", "MD", "VA", "WV", "NC", "SC", "GA", "FL", "DC")) {
+        return("South Atlantic")
+    } else if (state %in% c("KY", "TN", "MS", "AL")) {
+        return("East South Central")
+    } else if (state %in% c("TX", "OK", "AR", "LA")) {
+        return("West South Central")
+    } else if (state %in% c("CA", "WA", "OR", "HI", "AK")) {
+        return("Pacific")
+    } else {
+        return(NA)
+    }
+}
+
+us$REGION <- sapply(us$State_Code, state_to_region)
+sub2$REGION <- as.character(sub2$REGION)
+
+#partyID 
+sub2$PARTYID[sub2$PARTYID==7] <- NA
+sub2 <- sub2 %>%
+    filter(!is.na(PARTYID))
+
+sub2$PARTYID = sub2$PARTYID + 1 #so now it's 1 to 7 
+sub2$PARTYID = 8 - sub2$PARTYID # rev code
+
+partyid_avg <- sub2 %>% 
+  group_by(REGION) %>% 
+  summarise(mean_partyid = mean(PARTYID, na.rm = TRUE))
+
+party_id_map <- left_join(us, partyid_avg, by = "REGION")
+
+tradmod_equal <- sub2 %>%
+    filter(TRADMOD == 1 | TRADMOD == 2) %>%
+    group_by(REGION) %>%
+    summarise(
+        equal_hh_res = mean(TRADMOD == 2) * 100
+    )
+
+partyid_avg <- left_join(tradmod_equal, partyid_avg, by = "REGION")
+
+
+sub2$CHLDIDEL[sub2$CHLDIDEL==8] <- NA
+sub2$CHLDIDEL[sub2$CHLDIDEL==9] <- NA
+sub2 <- sub2 %>%
+    filter(!is.na(CHLDIDEL))
+
+children_avg <- sub2 %>% 
+  group_by(REGION) %>% 
+  summarise(mean_children = mean(CHLDIDEL, na.rm = TRUE))
+
+partyid_avg <- left_join(children_avg, partyid_avg, by = "REGION")
+
+sub2$SPHMEWRK[sub2$SPHMEWRK ==1] <- 1
+sub2$SPHMEWRK[sub2$SPHMEWRK ==2] <- 1
+sub2$SPHMEWRK[sub2$SPHMEWRK ==3] <- 1
+
+sub2$SPHMEWRK[sub2$SPHMEWRK ==4] <- 0 
+sub2$SPHMEWRK[sub2$SPHMEWRK ==5] <- 0
+sub2$SPHMEWRK[sub2$SPHMEWRK ==6] <- 0
+
+spo_hh_work <- sub2 %>%
+    filter(SPHMEWRK == 0 | SPHMEWRK == 1) %>%
+    group_by(REGION) %>%
+    summarise(
+        spo_hh_work = mean(SPHMEWRK == 1) * 100
+    )
+
+partyid_avg <- left_join(spo_hh_work, partyid_avg,by = "REGION")
+
+
+party_id_map <- left_join(us, partyid_avg, by = "REGION")
+
+pal <- colorNumeric(palette = rev("RdBu"), domain = party_id_map$mean_partyid)
+
+leaflet(data = party_id_map) %>%
+    addTiles() %>%
+    addPolygons(
+        fillColor = ~pal(mean_partyid),
+        color = "black",  
+        weight = 1,  
+        fillOpacity = 0.7, 
+        smoothFactor = 0.5,  
+        popup = ~paste0("Region: ", REGION, "<br> Equal Responsibility in Household: ", round(equal_hh_res, 2), "%", "<br> Spouse Major Contribution in Home Tasks: ",  round(spo_hh_work, 2), "%","<br> Ideal # of Children: ", round(mean_children, 2))
+    ) %>%
+    addLegend(
+        pal = pal,
+        values = ~mean_partyid,
+        title = "Party ID (scale of 5)",
+        position = "bottomright"
+    )
+
+```
+
+Mapping the reported party identification from varying strengths of Democrat to Republican (lower number out of 7 being more conservative, vice versa for liberal), we notice that all regions fall close to the middle (4), though regions that we associate being more Republican (ex. West South Central) and more Democrat (Middle Atlantic) still persist within the respondents' answers.
+
+Comparing these two, we notice some differences between the way respondents answered perspectives on equal responsibility in the household (earning income and taking care of the home), if one's spouse's contribution in the home is more than the respondent's, and the ideal number of children.
+
+We would hypothesize that the consistent party regions respondents belong to / their own reported party ID would reflect in some way for their answers. If you're more conservative / Republican, you may believe that the man should take the role in earning income, while the woman takes care of the home, that they feel that the contribution at home is uneven, and that maybe due to strong pro-life attitudes, envision more children in their life.
+
+For the West South Central, which is more conservative, those who believe that both the man / woman should have equal responsibility in income and taking care of the home is surprisingly the majority (60%). The idea that work their spouse contributes in the home being fair is relatively split (51%) -- a further analysis would include diving into what the gender the respondent reports as to understand the relationship between this question and the one previously about traditional gender roles in a relationship (like being the breadwinner). We can maybe assume that even though the first question was a majority, the two are only 9% off, reflecting that a decent chunk of respondents may feel that the division of labor isn't fair, even if they believe both them and their spouse should be contributing equally. The ideal number of children sits around 2.5, which might seem pretty normal back in 1996; it seems a bit lower nowadays around 1.9-2.
+
+Compared to the Middle Atlantic, the opinions about equal responsibility in the home, income / taking care of the home is even more popular (74%), which align with our expectations. Because of this, we also think that feelings of one's spouse's contribution at home being fair would be also high, which is observed (67%). The respondents in this region reflect a slightly lower number of ideal children than the West South Central region, at 2.38 children, which aligns with our assumptions prior.
+
+So if you're looking for a relationship that divides its goals between working and housework/taking care of the children evenly, you might want to head towards the northeast compared to the mid-south.
+
+Something that is interesting to note is the respondent's self reported party ID, which is mapped, but comparing it to the party the state as a whole leans towards being different. For the regions discussed above, most of the region did vote similarly in the 1996 presidential election.
+
+![](1996_elec.png)
